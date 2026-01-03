@@ -19,18 +19,12 @@ Environment Variables Required:
 - WORKFRONT_PRIVATE_KEY: Private key for JWT signing
 """
 
-import os
 import time
 import logging
 import jwt
 import requests
-from dotenv import load_dotenv
+from config import Config
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -38,37 +32,26 @@ def get_workfront_session_id() -> str:
     """
     Generate a Workfront OAuth session ID using JWT authentication.
     
-    This function creates a JWT token using credentials from environment variables
+    This function creates a JWT token using credentials from Config
     and exchanges it for an OAuth session ID from Workfront.
     
     Returns:
         str: Workfront session ID (access token) that can be used for API calls
         
     Raises:
-        ValueError: If required environment variables are missing
+        ValueError: If required configuration is missing
         requests.HTTPError: If OAuth request fails
     """
-    # Retrieve configuration from environment variables
-    base = os.getenv('WORKFRONT_BASE')
-    client_id = os.getenv('WORKFRONT_CLIENT_ID')
-    client_secret = os.getenv('WORKFRONT_CLIENT_SECRET')
-    customer_id = os.getenv('WORKFRONT_CUSTOMER_ID')
-    user_id = os.getenv('WORKFRONT_USER_ID')
-    private_key = os.getenv('WORKFRONT_PRIVATE_KEY')
+    # Validate configuration
+    Config.validate_workfront_config()
     
-    # Validate that all required variables are present
-    required_vars = {
-        'WORKFRONT_BASE': base,
-        'WORKFRONT_CLIENT_ID': client_id,
-        'WORKFRONT_CLIENT_SECRET': client_secret,
-        'WORKFRONT_CUSTOMER_ID': customer_id,
-        'WORKFRONT_USER_ID': user_id,
-        'WORKFRONT_PRIVATE_KEY': private_key
-    }
-    
-    missing_vars = [var_name for var_name, var_value in required_vars.items() if not var_value]
-    if missing_vars:
-        raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+    # Get configuration
+    base = Config.WORKFRONT_BASE
+    client_id = Config.WORKFRONT_CLIENT_ID
+    client_secret = Config.WORKFRONT_CLIENT_SECRET
+    customer_id = Config.WORKFRONT_CUSTOMER_ID
+    user_id = Config.WORKFRONT_USER_ID
+    private_key = Config.WORKFRONT_PRIVATE_KEY
     
     # Create JWT token
     logger.debug("Creating JWT token for Workfront authentication")

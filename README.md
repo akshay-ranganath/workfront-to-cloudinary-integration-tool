@@ -15,18 +15,37 @@ A Python-based automation tool that synchronizes documents from Adobe Workfront 
 
 ```
 workfront-to-cloudinary-integration-tool/
-├── authenticate.py                     # Workfront OAuth authentication module
-├── workfront-workflow-demo-code.py    # Main workflow script
+├── main.py                            # Main entry point - orchestrates workflow
+├── config.py                          # Configuration management
+├── authenticate.py                    # Workfront OAuth authentication
+├── workfront_api.py                   # Workfront API client
+├── cloudinary_service.py              # Cloudinary service
+├── document_processor.py              # Document processing workflow
 ├── requirements.txt                   # Python dependencies
+├── LICENSE                            # MIT License
 ├── .env                               # Environment variables (not in repo)
+├── .gitignore                         # Git ignore rules
 └── README.md                          # This file
 ```
 
-### File Descriptions
+### Module Descriptions
 
-- **`authenticate.py`**: Handles Workfront authentication using OAuth JWT flow. Generates session IDs for API calls.
-- **`workfront-workflow-demo-code.py`**: Main workflow script that orchestrates the entire process from task discovery to document upload.
+- **`main.py`**: Main entry point for the workflow. Orchestrates the complete process with proper error handling and logging.
+- **`config.py`**: Centralized configuration management. Loads and validates all environment variables.
+- **`authenticate.py`**: Handles Workfront OAuth authentication using JWT flow. Generates session IDs for API calls.
+- **`workfront_api.py`**: Workfront API client with methods for searching tasks, downloading documents, and updating status.
+- **`cloudinary_service.py`**: Cloudinary service wrapper for uploading files and managing assets.
+- **`document_processor.py`**: Document processing pipeline that coordinates download -> upload -> update workflow.
 - **`requirements.txt`**: Python package dependencies with version constraints.
+
+### Architecture Benefits
+
+The modular architecture provides:
+- ✅ **Separation of Concerns**: Each module has a single, well-defined responsibility
+- ✅ **Testability**: Individual modules can be tested in isolation
+- ✅ **Reusability**: Components can be reused in other scripts or tools
+- ✅ **Maintainability**: Changes are localized to specific modules
+- ✅ **Error Handling**: Consistent exception handling across modules
 
 ## Prerequisites
 
@@ -103,7 +122,7 @@ TASK_ERROR=ERR
 Execute the main workflow script:
 
 ```bash
-python workfront-workflow-demo-code.py
+python main.py
 ```
 
 ### What Happens During Execution
@@ -121,19 +140,46 @@ python workfront-workflow-demo-code.py
 ### Example Output
 
 ```
-INFO:__main__:Starting Workfront to Cloudinary document upload workflow...
-INFO:__main__:✅ GET Successful
-INFO:__main__:Found 3 tasks with status 'Upload to Cloudinary'
-INFO:__main__:Validating tasks have documents...
-INFO:__main__:Task ABC123 has 2 documents
-INFO:authenticate:✅ Session ID retrieved successfully
-INFO:__main__:Successfully authenticated with Workfront
-INFO:__main__:Processing task ABC123 with 2 documents
-INFO:__main__:Downloaded document DOC456 to /tmp/tmpxyz123
-INFO:__main__:Document DOC456 updated with Cloudinary url https://res.cloudinary.com/...
-INFO:__main__:✅ PUT Successful
-INFO:__main__:Task ABC123 updated to status: CPL
-INFO:__main__:All tasks have been processed. Workflow complete.
+2026-01-03 10:15:23 - __main__ - INFO - 🚀 Starting Workfront to Cloudinary document upload workflow
+
+2026-01-03 10:15:23 - __main__ - INFO - ✅ Configuration validated successfully
+2026-01-03 10:15:23 - __main__ - INFO - Initializing services...
+2026-01-03 10:15:23 - __main__ - INFO - ✅ Services initialized
+
+2026-01-03 10:15:23 - __main__ - INFO - Authenticating with Workfront...
+2026-01-03 10:15:24 - authenticate - INFO - ✅ Session ID retrieved successfully
+2026-01-03 10:15:24 - __main__ - INFO - ✅ Authentication successful
+
+2026-01-03 10:15:24 - __main__ - INFO - Searching for tasks with status 'UPL'...
+2026-01-03 10:15:24 - workfront_api - INFO - ✅ GET Successful
+2026-01-03 10:15:24 - __main__ - INFO - Found 3 tasks for processing
+
+2026-01-03 10:15:24 - __main__ - INFO - 
+============================================================
+2026-01-03 10:15:24 - __main__ - INFO - Processing Task 1/3: ABC123
+2026-01-03 10:15:24 - __main__ - INFO - Documents: 2
+2026-01-03 10:15:24 - __main__ - INFO - ============================================================
+2026-01-03 10:15:24 - document_processor - INFO - Processing 2 documents for task ABC123
+2026-01-03 10:15:24 - document_processor - INFO - Processing document DOC456 (image.jpg)
+2026-01-03 10:15:24 - workfront_api - INFO - ✅ Downloaded document DOC456
+2026-01-03 10:15:25 - cloudinary_service - INFO - ✅ File uploaded successfully: https://res.cloudinary.com/...
+2026-01-03 10:15:25 - workfront_api - INFO - ✅ PUT Successful
+2026-01-03 10:15:25 - workfront_api - INFO - Document DOC456 updated successfully
+2026-01-03 10:15:26 - document_processor - INFO - ✅ All documents processed successfully for task ABC123
+2026-01-03 10:15:26 - workfront_api - INFO - ✅ PUT Successful
+2026-01-03 10:15:26 - workfront_api - INFO - Task ABC123 updated to status 'CPL'
+
+2026-01-03 10:15:30 - __main__ - INFO - 
+============================================================
+2026-01-03 10:15:30 - __main__ - INFO - WORKFLOW SUMMARY
+2026-01-03 10:15:30 - __main__ - INFO - ============================================================
+2026-01-03 10:15:30 - __main__ - INFO - Total Tasks Processed: 3
+2026-01-03 10:15:30 - __main__ - INFO - Successful Tasks: 3
+2026-01-03 10:15:30 - __main__ - INFO - Failed Tasks: 0
+2026-01-03 10:15:30 - __main__ - INFO - Total Documents: 5
+2026-01-03 10:15:30 - __main__ - INFO - ============================================================
+
+2026-01-03 10:15:30 - __main__ - INFO - ✅ Workflow completed successfully
 ```
 
 ## Workflow Details
@@ -150,7 +196,7 @@ INFO:__main__:All tasks have been processed. Workflow complete.
 
 ### Cloudinary Organization
 
-Documents are uploaded with the following structure. This is just for demo purpose. If you want to change, please update the function `upload_to_cloudinary` in the file `workfront-workflow-demo-code.py`.
+Documents are uploaded with the following structure. This is just for demo purpose. If you want to change, please update the `upload_file` method in `cloudinary_service.py`.
 
 - **Asset Folder**: `workfront/`
 - **Public ID**: Workfront document ID
@@ -166,30 +212,93 @@ Documents are uploaded with the following structure. This is just for demo purpo
 
 ## Development
 
-### Adding New Features
+### Module Architecture
 
-The code is organized into logical sections:
+The codebase has the following architecture:
 
-1. **API Utility Functions** (`api_request`): Generic Workfront API calls
-2. **Authentication** (`authenticate.py`): OAuth JWT flow
-3. **Document Handling**: Download, upload, cleanup
-4. **Workfront Updates**: Document and task status updates
-5. **Main Workflow**: Orchestration logic
+```
+┌─────────────────────────────────────────────────────┐
+│                     main.py                         │
+│              (Workflow Orchestration)               │
+└──────────────┬─────────────┬────────────────────────┘
+               │             │
+     ┌─────────┴──────┐     │
+     │                │     │
+┌────▼─────┐    ┌────▼──────▼────────┐    ┌──────────────┐
+│ config.py│◄───│document_processor.py│───►│ authenticate │
+└──────────┘    └────┬──────┬─────────┘    └──────────────┘
+                     │      │
+              ┌──────┴──┐ ┌─┴─────────────┐
+              │workfront│ │cloudinary     │
+              │_api.py  │ │_service.py    │
+              └─────────┘ └───────────────┘
+```
+
+### Extending the Code
+
+1. **API Endpoints**: Add methods to `workfront_api.py` or `cloudinary_service.py`
+2. **Processing Logic**: Extend `document_processor.py`
+3. **Configuration Options**: Add to `config.py` with environment variable
+4. **Workflow Changes**: Modify `main.py` orchestration
+
+### Code Style Guidelines
+
+- Use type hints for function parameters and return values
+- Use descriptive variable and function names
+- Add docstrings to all public functions and classes
+- Use custom exceptions for error handling (`WorkfrontAPIError`, `CloudinaryServiceError`)
+- Log important operations with appropriate levels (DEBUG, INFO, WARNING, ERROR)
 
 ### Logging Levels
 
-Change logging level in the scripts:
+Change logging level in `main.py`:
 ```python
 logging.basicConfig(level=logging.DEBUG)  # For detailed logs
 logging.basicConfig(level=logging.INFO)   # For normal operation
 ```
 
+### Running Tests
+
+To test individual modules:
+
+```python
+# Test configuration
+from config import Config
+Config.validate_all()
+
+# Test authentication
+from authenticate import get_workfront_session_id
+session_id = get_workfront_session_id()
+
+# Test Workfront API
+from workfront_api import WorkfrontAPI
+api = WorkfrontAPI()
+tasks = api.search_tasks('UPL', limit=10)
+```
+
+## Configuration Options
+
+You can customize the workflow behavior with these optional environment variables:
+
+```bash
+# Asset organization in Cloudinary
+CLOUDINARY_ASSET_FOLDER=workfront  # Default folder for uploads
+
+# Task status codes (if different from defaults)
+TASK_STATUS_UPLOAD=UPL  # Status code for tasks to process
+TASK_COMPLETE=CPL       # Status code for successful completion
+TASK_ERROR=ERR          # Status code for failed tasks
+
+# Processing limits
+MAX_TASKS_PER_RUN=100   # Maximum tasks to process per execution
+```
+
 ## Known Limitations
 
-- Task status is determined by the last document processed (TODO: improve to track all documents)
-- Processes up to 100 tasks per run (set by `$$LIMIT=100` parameter)
+- Processes up to 100 tasks per run (configurable via `MAX_TASKS_PER_RUN`)
 - JWT tokens expire after 3 minutes (automatically regenerated on each run)
-- Currently only processes tasks with status "UPL"
+- Currently only processes tasks with status "UPL" (configurable via `TASK_STATUS_UPLOAD`)
+- Task is marked as failed if ANY document fails to upload
 
 ## Troubleshooting
 
@@ -217,7 +326,16 @@ logging.basicConfig(level=logging.INFO)   # For normal operation
 
 ## License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### What this means:
+- ✅ Use commercially
+- ✅ Modify freely
+- ✅ Distribute
+- ✅ Private use
+- ✅ No restrictions on what you can do with it
+
+The only requirement is to include the copyright notice and license in copies of the software.
 
 ## Contributing
 
