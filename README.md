@@ -1,3 +1,5 @@
+![cloudinary-workfront integration](https://akshayranganath-res.cloudinary.com/image/upload/f_auto,q_auto,w_850/blog/workfront-integration.png
+)
 # Workfront to Cloudinary Integration Tool
 
 A Python-based automation tool that synchronizes documents from Adobe Workfront tasks to Cloudinary DAM. This tool monitors Workfront tasks with a specific status, downloads their associated documents, uploads them to Cloudinary, and updates both systems with the results.
