@@ -1,0 +1,14 @@
+# Workfront to Cloudinary Integration Tool - Python Dependencies
+
+# Cloudinary SDK for uploading and managing media assets
+cloudinary>=1.36.0
+
+# HTTP library for API requests
+requests>=2.31.0
+
+# JWT token generation for Workfront OAuth authentication
+PyJWT>=2.8.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
